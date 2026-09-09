@@ -52,7 +52,7 @@ export const ProfileUpdate: React.FC = () => {
 
                                 <div className="flex flex-col items-center text-center">
                                     <img
-                                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+                                        src=""
                                         alt="Wade Warren"
                                         className="w-20 h-20 rounded-full object-cover mb-3"
                                     />

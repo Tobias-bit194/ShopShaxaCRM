@@ -92,7 +92,7 @@ export const Sidebar: React.FC = () => {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">
             <img 
-              src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" 
+              src="" 
               alt="Avatar" 
               className="w-10 h-10 rounded-full object-cover" 
             />

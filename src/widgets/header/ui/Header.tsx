@@ -50,7 +50,7 @@ export const Header: React.FC = () => {
 
 
         <img 
-          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" 
+          src="" 
           alt="User" 
           className="w-10 h-10 rounded-full object-cover border border-gray-200"
         />
