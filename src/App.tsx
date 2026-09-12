@@ -11,9 +11,10 @@ import { CategoriesPage } from './processes/pages/categories/ui/CategoriesPage';
 import { AddProductPage } from './processes/pages/products/ui/AddProductPage';
 import { ProfileUpdate } from './processes/pages/admin/ui/ProfileUpdate';
 
-// Компонент проверки авторизации
+
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const token = localStorage.getItem('token');
+
+  const token = localStorage.getItem('crmAccessToken');
   if (!token) {
     return <Navigate to="/login" replace />;
   }
@@ -24,13 +25,12 @@ export const App: React.FC = () => {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Публичная страница входа */}
+
         <Route path="/login" element={<Login />} />
 
-        {/* Корень перенаправляет на дашборд */}
+     
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
-        {/* Защищенные роуты панели управления и Swagger */}
         <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
         <Route path="/orders" element={<RequireAuth><OrdersPage /></RequireAuth>} />
         <Route path="/customers" element={<RequireAuth><CustomersPage /></RequireAuth>} />
@@ -39,7 +39,7 @@ export const App: React.FC = () => {
         <Route path="/profile" element={<RequireAuth><ProfileUpdate /></RequireAuth>} />
         <Route path="/api-docs" element={<RequireAuth><SwaggerPage /></RequireAuth>} />
 
-        {/* Редирект для несуществующих путей */}
+     
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </BrowserRouter>

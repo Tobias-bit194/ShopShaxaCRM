@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Sidebar } from '../../../../widgets/sidebar/ui/Sidebar';
 import { Header } from '../../../../widgets/header/ui/Header';
+import api from '../../../../services/api'; 
 import {
     Edit,
     Calendar,
@@ -15,28 +16,118 @@ import {
 } from 'lucide-react';
 
 export const ProfileUpdate: React.FC = () => {
-    // Parollarni ko'rsatish/yashirish state'lari
+   
     const [showCurrent, setShowCurrent] = useState(false);
     const [showNew, setShowNew] = useState(false);
     const [showReNew, setShowReNew] = useState(false);
     const [showProfilePassword, setShowProfilePassword] = useState(false);
 
+  
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [profilePassword, setProfilePassword] = useState('');
+
+   
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+    const [reEnterPassword, setReEnterPassword] = useState('');
+
+   
+    const [loading, setLoading] = useState(false);
+    const [message, setMessage] = useState('');
+
+  
+    useEffect(() => {
+        const fetchProfile = async () => {
+            try {
+                const response = await api.get('/admin/profile');
+                const data = response.data;
+                
+              
+                setFirstName(data.firstName || '');
+                setLastName(data.lastName || '');
+                setEmail(data.email || '');
+                setPhone(data.phone || '');
+            } catch (error) {
+                console.error('Ошибка при загрузке профиля:', error);
+            }
+        };
+
+        fetchProfile();
+    }, []);
+
+
+    const handleUpdateProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setMessage('');
+
+        try {
+      
+            const bodyData = {
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                phone: phone,
+            };
+
+            await api.patch('/admin/profile', bodyData);
+            setMessage('Профиль успешно обновлен!');
+        } catch (error: any) {
+            console.error('Ошибка при обновлении:', error);
+            setMessage(error.response?.data?.message || 'Ошибка при обновлении профиля');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    const handleChangePassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (newPassword !== reEnterPassword) {
+            alert('Новые пароли не совпадают!');
+            return;
+        }
+
+        try {
+            const bodyData = {
+                currentPassword: currentPassword,
+                newPassword: newPassword,
+            };
+
+            await api.patch('/api/admin/profile/password', bodyData);
+            alert('Пароль успешно изменен!');
+            
+   
+            setCurrentPassword('');
+            setNewPassword('');
+            setReEnterPassword('');
+        } catch (error: any) {
+            console.error('Ошибка при смене пароля:', error);
+            alert(error.response?.data?.message || 'Ошибка при смене пароля');
+        }
+    };
+
     return (
         <div className="flex bg-[#f8fafc] min-h-screen font-sans">
-            {/* 1. Фиксированный сайдбар слева */}
+          
             <Sidebar />
 
-            {/* 2. Основная часть (Хедер + Контент) */}
+           
             <div className="flex-1 flex flex-col min-w-0">
                 <Header />
 
                 <main className="p-8 overflow-y-auto">
-                    <h1 className="text-xl font-bold text-gray-800 mb-6">About section</h1>
+                    <h1 className="text-xl font-bold text-gray-800 mb-2">About section</h1>
+                    {message && <p className="text-xs text-green-600 font-semibold mb-4">{message}</p>}
  
                     <div className="flex flex-col lg:flex-row gap-6 items-start">
-                        {/* ================= LEFT SIDEBAR (Profile & Password) ================= */}
+                   
                         <div className="flex flex-col gap-5 w-full lg:w-[340px]">
-                            {/* 1. Profile Card */}
+                 
                             <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
                                 <div className="flex justify-between items-center mb-2">
                                     <h3 className="font-bold text-gray-800 text-base">Profile</h3>
@@ -52,19 +143,19 @@ export const ProfileUpdate: React.FC = () => {
 
                                 <div className="flex flex-col items-center text-center">
                                     <img
-                                        src=""
-                                        alt="Wade Warren"
+                                        src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+                                        alt="Avatar"
                                         className="w-20 h-20 rounded-full object-cover mb-3"
                                     />
-                                    <h4 className="font-bold text-gray-900 text-base">Wade Warren</h4>
+                                    <h4 className="font-bold text-gray-900 text-base">{firstName} {lastName}</h4>
                                     <div className="flex items-center gap-1.5 text-xs text-gray-400 mt-0.5">
-                                        <span>wade.warren@example.com</span>
+                                        <span>{email}</span>
                                         <Copy size={13} className="cursor-pointer hover:text-gray-600" />
                                     </div>
 
                                     <span className="text-[11px] text-gray-400 mt-4">Linked with Social media</span>
 
-                                    {/* Social Links */}
+                                
                                     <div className="flex items-center justify-center gap-3 mt-2 text-[10px] font-medium text-indigo-400">
                                         <div className="flex items-center gap-1 cursor-pointer">
                                             <span className="text-red-500 font-bold text-sm">G</span>
@@ -90,7 +181,7 @@ export const ProfileUpdate: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* 2. Change Password Card */}
+                         
                             <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm">
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-bold text-gray-800 text-base">Change Password</h3>
@@ -99,14 +190,16 @@ export const ProfileUpdate: React.FC = () => {
                                     </a>
                                 </div>
 
-                                <form className="flex flex-col gap-3.5" onSubmit={(e) => e.preventDefault()}>
-                                    {/* Current Password */}
+                                <form className="flex flex-col gap-3.5" onSubmit={handleChangePassword}>
+                                 
                                     <div className="flex flex-col gap-1">
                                         <label className="text-xs font-semibold text-gray-600">Current Password</label>
                                         <div className="relative flex items-center">
                                             <input
                                                 type={showCurrent ? "text" : "password"}
                                                 placeholder="Enter password"
+                                                value={currentPassword}
+                                                onChange={(e) => setCurrentPassword(e.target.value)}
                                                 className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg py-2.5 px-3 pr-9 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition"
                                             />
                                             <button
@@ -117,18 +210,17 @@ export const ProfileUpdate: React.FC = () => {
                                                 {showCurrent ? <Eye size={15} /> : <EyeOff size={15} />}
                                             </button>
                                         </div>
-                                        <a href="#" className="text-[11px] text-indigo-400 hover:underline mt-0.5">
-                                            Forgot Current Password? Click here
-                                        </a>
                                     </div>
 
-                                    {/* New Password */}
+                                 
                                     <div className="flex flex-col gap-1">
                                         <label className="text-xs font-semibold text-gray-600">New Password</label>
                                         <div className="relative flex items-center">
                                             <input
                                                 type={showNew ? "text" : "password"}
                                                 placeholder="Enter password"
+                                                value={newPassword}
+                                                onChange={(e) => setNewPassword(e.target.value)}
                                                 className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg py-2.5 px-3 pr-9 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition"
                                             />
                                             <button
@@ -141,13 +233,15 @@ export const ProfileUpdate: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    {/* Re-enter Password */}
+                                   
                                     <div className="flex flex-col gap-1">
                                         <label className="text-xs font-semibold text-gray-600">Re-enter Password</label>
                                         <div className="relative flex items-center">
                                             <input
                                                 type={showReNew ? "text" : "password"}
                                                 placeholder="Enter password"
+                                                value={reEnterPassword}
+                                                onChange={(e) => setReEnterPassword(e.target.value)}
                                                 className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg py-2.5 px-3 pr-9 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition"
                                             />
                                             <button
@@ -164,27 +258,19 @@ export const ProfileUpdate: React.FC = () => {
                                         type="submit"
                                         className="w-full bg-[#48A375] hover:bg-[#3d8c64] text-white font-semibold py-2.5 rounded-lg text-xs transition mt-2"
                                     >
-                                        Save Change
+                                        Change Password
                                     </button>
                                 </form>
                             </div>
                         </div>
 
-                        {/* ================= RIGHT MAIN SECTION (Profile Form) ================= */}
+                      
                         <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex-1 w-full">
-                            {/* Header */}
                             <div className="flex justify-between items-center mb-6">
                                 <h2 className="font-bold text-gray-800 text-lg">Profile Update</h2>
-                                <button
-                                    type="button"
-                                    className="flex items-center gap-1.5 border border-gray-200 rounded-lg px-3.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition"
-                                >
-                                    <Edit size={14} />
-                                    Edit
-                                </button>
                             </div>
 
-                            {/* Profile Photo Upload */}
+                       
                             <div className="flex items-center gap-4 mb-6">
                                 <img
                                     src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
@@ -207,35 +293,39 @@ export const ProfileUpdate: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Form Fields */}
-                            <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={(e) => e.preventDefault()}>
-                                {/* First Name */}
+                      
+                            <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleUpdateProfile}>
+
                                 <div className="flex flex-col gap-1.5">
                                     <label className="text-xs font-semibold text-gray-600">First Name</label>
                                     <input
                                         type="text"
-                                        defaultValue="Wade"
+                                        value={firstName}
+                                        onChange={(e) => setFirstName(e.target.value)}
                                         className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg py-2.5 px-3.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition"
                                     />
                                 </div>
 
-                                {/* Last Name */}
+                      
                                 <div className="flex flex-col gap-1.5">
                                     <label className="text-xs font-semibold text-gray-600">Last Name</label>
                                     <input
                                         type="text"
-                                        defaultValue="Warren"
+                                        value={lastName}
+                                        onChange={(e) => setLastName(e.target.value)}
                                         className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg py-2.5 px-3.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition"
                                     />
                                 </div>
 
-                                {/* Password */}
+                     
                                 <div className="flex flex-col gap-1.5">
                                     <label className="text-xs font-semibold text-gray-600">Password</label>
                                     <div className="relative flex items-center">
                                         <input
                                             type={showProfilePassword ? "text" : "password"}
-                                            defaultValue="************"
+                                            value={profilePassword}
+                                            onChange={(e) => setProfilePassword(e.target.value)}
+                                            placeholder="************"
                                             className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg py-2.5 px-3.5 pr-10 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition"
                                         />
                                         <button
@@ -248,7 +338,7 @@ export const ProfileUpdate: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Phone Number */}
+                          
                                 <div className="flex flex-col gap-1.5">
                                     <label className="text-xs font-semibold text-gray-600">Phone Number</label>
                                     <div className="flex gap-2">
@@ -258,76 +348,33 @@ export const ProfileUpdate: React.FC = () => {
                                         </div>
                                         <input
                                             type="text"
-                                            defaultValue="(406) 555-0120"
+                                            value={phone}
+                                            onChange={(e) => setPhone(e.target.value)}
                                             className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg py-2.5 px-3.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition"
                                         />
                                     </div>
                                 </div>
 
-                                {/* E-mail */}
-                                <div className="flex flex-col gap-1.5">
+                         
+                                <div className="flex flex-col gap-1.5 md:col-span-2">
                                     <label className="text-xs font-semibold text-gray-600">E-mail</label>
                                     <input
                                         type="email"
-                                        defaultValue="wade.warren@example.com"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
                                         className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg py-2.5 px-3.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition"
                                     />
                                 </div>
 
-                                {/* Date of Birth */}
-                                <div className="flex flex-col gap-1.5">
-                                    <label className="text-xs font-semibold text-gray-600">Date of Birth</label>
-                                    <div className="relative flex items-center">
-                                        <input
-                                            type="text"
-                                            defaultValue="12- January- 1999"
-                                            className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg py-2.5 px-3.5 pr-10 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition"
-                                        />
-                                        <Calendar size={16} className="absolute right-3 text-gray-400 cursor-pointer hover:text-gray-600" />
-                                    </div>
-                                </div>
-
-                                {/* Location */}
-                                <div className="md:col-span-2 flex flex-col gap-1.5">
-                                    <label className="text-xs font-semibold text-gray-600">Location</label>
-                                    <input
-                                        type="text"
-                                        defaultValue="2972 Westheimer Rd. Santa Ana, Illinois 85486"
-                                        className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg py-2.5 px-3.5 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition"
-                                    />
-                                </div>
-
-                                {/* Credit Card */}
-                                <div className="md:col-span-2 flex flex-col gap-1.5">
-                                    <label className="text-xs font-semibold text-gray-600">Credit Card</label>
-                                    <div className="relative flex items-center">
-                                        <div className="absolute left-3 flex items-center gap-1">
-                                            <div className="w-3.5 h-3.5 bg-red-500 rounded-full opacity-90"></div>
-                                            <div className="w-3.5 h-3.5 bg-amber-500 rounded-full -ml-2.5 opacity-90"></div>
-                                        </div>
-                                        <input
-                                            type="text"
-                                            defaultValue="843-4359-4444"
-                                            className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg py-2.5 pl-9 pr-8 text-xs font-bold text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition"
-                                        />
-                                        <span className="absolute right-3 text-[10px] text-gray-400 cursor-pointer">▼</span>
-                                    </div>
-                                </div>
-
-                                {/* Biography */}
-                                <div className="md:col-span-2 flex flex-col gap-1.5">
-                                    <label className="text-xs font-semibold text-gray-600">Biography</label>
-                                    <div className="relative">
-                                        <textarea
-                                            rows={4}
-                                            placeholder="Enter a biography about you"
-                                            className="w-full bg-[#f8fafc] border border-gray-100 rounded-lg p-3.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#48A375] focus:bg-white transition resize-none"
-                                        />
-                                        <div className="absolute bottom-3 right-3 flex items-center gap-2 text-gray-400">
-                                            <Edit3 size={15} className="cursor-pointer hover:text-gray-600" />
-                                            <Wand2 size={15} className="cursor-pointer hover:text-gray-600" />
-                                        </div>
-                                    </div>
+                           
+                                <div className="md:col-span-2 mt-2">
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="bg-[#48A375] hover:bg-[#3d8c64] text-white font-semibold py-2.5 px-6 rounded-lg text-xs transition"
+                                    >
+                                        {loading ? 'Saving...' : 'Save Profile Changes'}
+                                    </button>
                                 </div>
                             </form>
                         </div>
